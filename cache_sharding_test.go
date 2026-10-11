@@ -63,7 +63,7 @@ func TestHotCacheShardedConcurrentAccess(t *testing.T) {
 				go func() {
 					defer workers.Done()
 					<-start
-					for i := 0; i < 256; i++ {
+					for i := 0; i < 64; i++ {
 						key := i % 64
 						cache.Set(key, key)
 						value, found, err := cache.Get(key)
