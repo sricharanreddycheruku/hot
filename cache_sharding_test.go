@@ -85,3 +85,25 @@ func TestHotCacheShardedConcurrentAccess(t *testing.T) {
 		})
 	}
 }
+
+func BenchmarkHotCacheShardedConcurrentAccess(b *testing.B) {
+	for _, shards := range []uint64{1, 16} {
+		b.Run(fmt.Sprintf("shards=%d", shards), func(b *testing.B) {
+			config := NewHotCache[int, int](LRU, 64)
+			if shards > 1 {
+				config = config.WithSharding(shards, func(key int) uint64 { return uint64(key) })
+			}
+			cache := config.Build()
+			b.ReportAllocs()
+			b.ResetTimer()
+			b.RunParallel(func(pb *testing.PB) {
+				key := 0
+				for pb.Next() {
+					cache.Set(key, key)
+					_, _, _ = cache.Get(key)
+					key = (key + 1) % 64
+				}
+			})
+		})
+	}
+}
